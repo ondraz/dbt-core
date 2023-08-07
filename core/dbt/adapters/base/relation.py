@@ -1,6 +1,7 @@
 from collections.abc import Hashable
 from dataclasses import dataclass, field
 from typing import Optional, TypeVar, Any, Type, Dict, Iterator, Tuple, Set, Union, FrozenSet
+import uuid
 
 from dbt.contracts.graph.nodes import SourceDefinition, ManifestNode, ResultNode, ParsedNode
 from dbt.contracts.relation import (
@@ -36,6 +37,7 @@ class BaseRelation(FakeAPIObject, Hashable):
     include_policy: Policy = field(default_factory=lambda: Policy())
     quote_policy: Policy = field(default_factory=lambda: Policy())
     dbt_created: bool = False
+    sample: Optional[int] = None
 
     # register relation types that can be renamed for the purpose of replacing relations using stages and backups
     # adding a relation type here also requires defining the associated rename macro
@@ -192,7 +194,11 @@ class BaseRelation(FakeAPIObject, Hashable):
 
     def render(self) -> str:
         # if there is nothing set, this will return the empty string.
-        return ".".join(part for _, part in self._render_iterator() if part is not None)
+        rendered_parts = ".".join(part for _, part in self._render_iterator() if part is not None)
+        if self.sample and rendered_parts:
+            alias = f"_dbt_sample_{uuid.uuid4().hex.upper()[:6]}"
+            return f"(select * from {rendered_parts} limit {self.sample}) {alias}"
+        return rendered_parts
 
     def quoted(self, identifier):
         return "{quote_char}{identifier}{quote_char}".format(

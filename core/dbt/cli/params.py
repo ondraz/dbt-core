@@ -415,6 +415,14 @@ include_saved_query = click.option(
     hidden=True,
 )
 
+sample = click.option(
+    "--sample",
+    envvar="DBT_SAMPLE",
+    help="Limit by sample rows when resolving dbt ref and sources.",
+    type=click.INT,
+    default=None,
+)
+
 model_decls = ("-m", "--models", "--model")
 select_decls = ("-s", "--select")
 select_attrs = {
