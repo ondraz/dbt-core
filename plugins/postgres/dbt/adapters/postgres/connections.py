@@ -33,6 +33,7 @@ class PostgresCredentials(Credentials):
     sslrootcert: Optional[str] = None
     application_name: Optional[str] = "dbt"
     retries: int = 1
+    register_extra_data_types: bool = False
 
     _ALIASES = {"dbname": "database", "pass": "password"}
 
@@ -61,6 +62,7 @@ class PostgresCredentials(Credentials):
             "sslrootcert",
             "application_name",
             "retries",
+            "register_extra_data_types",
         )
 
 
@@ -129,6 +131,9 @@ class PostgresConnectionManager(SQLConnectionManager):
 
         if credentials.application_name:
             kwargs["application_name"] = credentials.application_name
+
+        if credentials.register_extra_data_types:
+            kwargs["register_extra_data_types"] = credentials.register_extra_data_types
 
         def connect():
             handle = psycopg2.connect(
