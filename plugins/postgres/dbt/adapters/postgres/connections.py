@@ -143,8 +143,8 @@ class PostgresConnectionManager(SQLConnectionManager):
             )
 
             # Register extra data types to avoid dbt contract errors
-            register_uuid(conn_or_curs=handle)
-            register_ipaddress(conn_or_curs=handle)
+            register_uuid()
+            register_ipaddress()
 
             if credentials.role:
                 handle.cursor().execute("set role {}".format(credentials.role))
