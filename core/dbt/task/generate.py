@@ -27,7 +27,6 @@ from dbt.contracts.results import (
 from dbt.exceptions import DbtInternalError, AmbiguousCatalogMatchError
 from dbt.graph import ResourceTypeSelector
 from dbt.node_types import NodeType
-from dbt.adapters.include.global_project import DOCS_INDEX_FILE_PATH
 from dbt.common.events.functions import fire_event
 from dbt.common.events.types import (
     WriteCatalogFailure,
@@ -44,6 +43,9 @@ from dbt.constants import (
 )
 
 CATALOG_FILENAME = "catalog.json"
+DOCS_INDEX_FILE_PATH = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), "..", "index.html")
+)
 
 
 def get_stripped_prefix(source: Dict[str, Any], prefix: str) -> Dict[str, Any]:
