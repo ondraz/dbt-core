@@ -234,13 +234,11 @@ class BaseRelation(FakeAPIObject, Hashable):
         cls: Type[Self],
         config: HasQuoting,
         node: ManifestNode,
+        **kwargs: Any,
     ) -> Self:
         # Note that ephemeral models are based on the name.
         identifier = cls.add_ephemeral_prefix(node.name)
-        return cls.create(
-            type=cls.CTE,
-            identifier=identifier,
-        ).quote(identifier=False)
+        return cls.create(type=cls.CTE, identifier=identifier, **kwargs).quote(identifier=False)
 
     @classmethod
     def create_from_node(
