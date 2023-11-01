@@ -90,6 +90,12 @@ dry_run = click.option(
     is_flag=True,
 )
 
+empty = click.option(
+    "--empty",
+    envvar="DBT_EMPTY",
+    help="If specified, limit input refs and sources to zero rows.",
+    is_flag=True,
+)
 
 enable_legacy_logger = click.option(
     "--enable-legacy-logger/--no-enable-legacy-logger",
@@ -413,14 +419,6 @@ include_saved_query = click.option(
     help="Include saved queries in the list of resources to be selected for build command",
     is_flag=True,
     hidden=True,
-)
-
-sample = click.option(
-    "--sample",
-    envvar="DBT_SAMPLE",
-    help="Limit by sample rows when resolving dbt ref and sources.",
-    type=click.INT,
-    default=None,
 )
 
 model_decls = ("-m", "--models", "--model")

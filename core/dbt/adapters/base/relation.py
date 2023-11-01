@@ -1,7 +1,6 @@
 from collections.abc import Hashable
 from dataclasses import dataclass, field
 from typing import Optional, TypeVar, Any, Type, Dict, Iterator, Tuple, Set, Union, FrozenSet
-import uuid
 
 from dbt.contracts.graph.nodes import SourceDefinition, ManifestNode, ResultNode, ParsedNode
 from dbt.contracts.relation import (
@@ -37,7 +36,7 @@ class BaseRelation(FakeAPIObject, Hashable):
     include_policy: Policy = field(default_factory=lambda: Policy())
     quote_policy: Policy = field(default_factory=lambda: Policy())
     dbt_created: bool = False
-    sample: Optional[int] = None
+    empty: bool = False
 
     # register relation types that can be renamed for the purpose of replacing relations using stages and backups
     # adding a relation type here also requires defining the associated rename macro
@@ -50,6 +49,9 @@ class BaseRelation(FakeAPIObject, Hashable):
     # e.g. adding RelationType.View in dbt-postgres requires that you define:
     # include/postgres/macros/relations/view/replace.sql::postgres__get_replace_view_sql()
     replaceable_relations: SerializableIterable = ()
+
+    # empty subquery template used when rendering a relation in the context of an --empty invocation
+    empty_subquery_template = "(select * from {} where false limit 0) _dbt_empty_subq"
 
     def _is_exactish_match(self, field: ComponentName, value: str) -> bool:
         if self.dbt_created and self.quote_policy.get_part(field) is False:
@@ -195,9 +197,8 @@ class BaseRelation(FakeAPIObject, Hashable):
     def render(self) -> str:
         # if there is nothing set, this will return the empty string.
         rendered_parts = ".".join(part for _, part in self._render_iterator() if part is not None)
-        if self.sample and rendered_parts:
-            alias = f"_dbt_sample_{uuid.uuid4().hex.upper()[:6]}"
-            return f"(select * from {rendered_parts} limit {self.sample}) {alias}"
+        if self.empty and rendered_parts:
+            return self.empty_subquery_template.format(rendered_parts)
         return rendered_parts
 
     def quoted(self, identifier):
