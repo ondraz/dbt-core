@@ -532,11 +532,11 @@ class RuntimeRefResolver(BaseRefResolver):
         if target_model.is_ephemeral_model:
             self.model.set_cte(target_model.unique_id, None)
             return self.Relation.create_ephemeral_from_node(
-                self.config, target_model, empty=self.config.args.empty
+                self.config, target_model, empty=getattr(self.config.args, "EMPTY", False)
             )
         else:
             return self.Relation.create_from(
-                self.config, target_model, empty=self.config.args.empty
+                self.config, target_model, empty=getattr(self.config.args, "EMPTY", False)
             )
 
     def validate(
@@ -594,7 +594,9 @@ class RuntimeSourceResolver(BaseSourceResolver):
                 target_kind="source",
                 disabled=(isinstance(target_source, Disabled)),
             )
-        return self.Relation.create_from_source(target_source, empty=self.config.args.empty)
+        return self.Relation.create_from_source(
+            target_source, empty=getattr(self.config.args, "EMPTY", False)
+        )
 
 
 # metric` implementations
