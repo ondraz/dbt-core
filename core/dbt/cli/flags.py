@@ -107,6 +107,7 @@ class Flags:
         def _assign_params(
             ctx: Context,
             params_assigned_from_default: set,
+            params_assigned_from_user: set,
             deprecated_env_vars: Dict[str, Callable],
         ):
             """Recursively adds all click params to flag object"""
@@ -173,15 +174,30 @@ class Flags:
                     object.__setattr__(self, flag_name, param_value)
 
                 # Track default assigned params.
-                if is_default:
+                # For flags that are accepted at both 'parent' and 'child' levels,
+                # we need to track user-provided and default values across both,
+                # to support detection of mutually exclusive flags later on.
+                if not is_default:
+                    params_assigned_from_user.add(param_name)
+                    if param_name in params_assigned_from_default:
+                        params_assigned_from_default.remove(param_name)
+                if is_default and param_name not in params_assigned_from_user:
                     params_assigned_from_default.add(param_name)
 
             if ctx.parent:
-                _assign_params(ctx.parent, params_assigned_from_default, deprecated_env_vars)
+                _assign_params(
+                    ctx.parent,
+                    params_assigned_from_default,
+                    params_assigned_from_user,
+                    deprecated_env_vars,
+                )
 
+        params_assigned_from_user = set()  # type: Set[str]
         params_assigned_from_default = set()  # type: Set[str]
         deprecated_env_vars: Dict[str, Callable] = {}
-        _assign_params(ctx, params_assigned_from_default, deprecated_env_vars)
+        _assign_params(
+            ctx, params_assigned_from_default, params_assigned_from_user, deprecated_env_vars
+        )
 
         # Set deprecated_env_var_warnings to be fired later after events have been init.
         object.__setattr__(
@@ -198,7 +214,10 @@ class Flags:
             invoked_subcommand.ignore_unknown_options = True
             invoked_subcommand_ctx = invoked_subcommand.make_context(None, sys.argv)
             _assign_params(
-                invoked_subcommand_ctx, params_assigned_from_default, deprecated_env_vars
+                invoked_subcommand_ctx,
+                params_assigned_from_default,
+                params_assigned_from_user,
+                deprecated_env_vars,
             )
 
         if not user_config:
@@ -350,8 +369,6 @@ def command_params(command: CliCommand, args_dict: Dict[str, Any]) -> CommandPar
         elif (v is None or v is False) and k not in (
             # These are None by default but they do not support --no-{flag}
             "defer_state",
-            "warn_error",
-            "warn_error_options",
             "log_format",
         ):
             add_fn(f"--no-{spinal_cased}")
