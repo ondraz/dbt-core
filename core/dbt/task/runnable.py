@@ -617,10 +617,7 @@ class GraphRunnableTask(ConfiguredTask):
     def task_end_messages(self, results):
         print_run_end_messages(results)
 
-    def _get_deferred_manifest(self) -> Optional[WritableManifest]:
-        if not self.args.defer:
-            return None
-
+    def _get_previous_state(self) -> Optional[WritableManifest]:
         state = self.previous_defer_state or self.previous_state
         if not state:
             raise DbtRuntimeError(
@@ -630,3 +627,6 @@ class GraphRunnableTask(ConfiguredTask):
         if not state.manifest:
             raise DbtRuntimeError(f'Could not find manifest in --state path: "{state}"')
         return state.manifest
+
+    def _get_deferred_manifest(self) -> Optional[WritableManifest]:
+        return self._get_previous_state() if self.args.defer else None
