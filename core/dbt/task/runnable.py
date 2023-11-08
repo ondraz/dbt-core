@@ -130,9 +130,22 @@ class GraphRunnableTask(ConfiguredTask):
     def get_node_selector(self) -> NodeSelector:
         raise NotImplementedError(f"get_node_selector not implemented for task {type(self)}")
 
-    @abstractmethod
     def defer_to_manifest(self, adapter, selected_uids: AbstractSet[str]):
-        raise NotImplementedError(f"defer_to_manifest not implemented for task {type(self)}")
+        deferred_manifest = self._get_deferred_manifest()
+        if deferred_manifest is None:
+            return
+        if self.manifest is None:
+            raise DbtInternalError(
+                "Expected to defer to manifest, but there is no runtime manifest to defer from!"
+            )
+        self.manifest.merge_from_artifact(
+            adapter=adapter,
+            other=deferred_manifest,
+            selected=selected_uids,
+            favor_state=bool(self.args.favor_state),
+        )
+        # TODO: is it wrong to write the manifest here? I think it's right...
+        write_manifest(self.manifest, self.config.project_target_path)
 
     def get_graph_queue(self) -> GraphQueue:
         selector = self.get_node_selector()
@@ -605,6 +618,9 @@ class GraphRunnableTask(ConfiguredTask):
         print_run_end_messages(results)
 
     def _get_deferred_manifest(self) -> Optional[WritableManifest]:
+        if not self.args.defer:
+            return None
+
         state = self.previous_defer_state or self.previous_state
         if not state:
             raise DbtRuntimeError(

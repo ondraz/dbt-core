@@ -347,7 +347,13 @@ def command_params(command: CliCommand, args_dict: Dict[str, Any]) -> CommandPar
         if k == "macro" and command == CliCommand.RUN_OPERATION:
             add_fn(v)
         # None is a Singleton, False is a Flyweight, only one instance of each.
-        elif v is None or v is False:
+        elif (v is None or v is False) and k not in (
+            # These are None by default but they do not support --no-{flag}
+            "defer_state",
+            "warn_error",
+            "warn_error_options",
+            "log_format",
+        ):
             add_fn(f"--no-{spinal_cased}")
         elif v is True:
             add_fn(f"--{spinal_cased}")

@@ -1,7 +1,5 @@
 import threading
-from typing import AbstractSet, Optional
 
-from dbt.contracts.graph.manifest import WritableManifest
 from dbt.contracts.results import RunStatus, RunResult
 from dbt.events.base_types import EventLevel
 from dbt.events.functions import fire_event
@@ -14,7 +12,7 @@ from dbt.exceptions import (
 
 from dbt.graph import ResourceTypeSelector
 from dbt.node_types import NodeType
-from dbt.parser.manifest import write_manifest, process_node
+from dbt.parser.manifest import process_node
 from dbt.parser.sql import SqlBlockParser
 from dbt.task.base import BaseRunner
 from dbt.task.runnable import GraphRunnableTask
@@ -100,26 +98,6 @@ class CompileTask(GraphRunnableTask):
                     unique_id=result.node.unique_id,
                 )
             )
-
-    def _get_deferred_manifest(self) -> Optional[WritableManifest]:
-        return super()._get_deferred_manifest() if self.args.defer else None
-
-    def defer_to_manifest(self, adapter, selected_uids: AbstractSet[str]):
-        deferred_manifest = self._get_deferred_manifest()
-        if deferred_manifest is None:
-            return
-        if self.manifest is None:
-            raise DbtInternalError(
-                "Expected to defer to manifest, but there is no runtime manifest to defer from!"
-            )
-        self.manifest.merge_from_artifact(
-            adapter=adapter,
-            other=deferred_manifest,
-            selected=selected_uids,
-            favor_state=bool(self.args.favor_state),
-        )
-        # TODO: is it wrong to write the manifest here? I think it's right...
-        write_manifest(self.manifest, self.config.project_target_path)
 
     def _runtime_initialize(self):
         if getattr(self.args, "inline", None):
