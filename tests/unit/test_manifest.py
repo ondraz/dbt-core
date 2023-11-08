@@ -1041,7 +1041,8 @@ class MixedManifestTest(unittest.TestCase):
 
         original_manifest = Manifest(nodes=original_nodes)
         other_manifest = Manifest(nodes=other_nodes)
-        original_manifest.add_from_artifact(other_manifest.writable_manifest())
+        adapter = mock.MagicMock()
+        original_manifest.merge_from_artifact(adapter, other_manifest.writable_manifest(), {})
 
         # new node added should not be in original manifest
         assert "model.root.nested2" not in original_manifest.nodes
