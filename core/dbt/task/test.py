@@ -188,7 +188,7 @@ class TestSelector(ResourceTypeSelector):
             graph=graph,
             manifest=manifest,
             previous_state=previous_state,
-            resource_types=[NodeType.Test],
+            resource_types=[NodeType.DataTest],
         )
 
 
