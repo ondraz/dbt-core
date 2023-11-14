@@ -1223,6 +1223,13 @@ class UnpatchedSourceDefinition(BaseNode):
         else:
             return self.table.data_tests
 
+    @property
+    def tests(self) -> List[TestDef]:
+        if self.table.tests is None:
+            return []
+        else:
+            return self.table.tests
+
 
 @dataclass
 class ParsedSourceMandatory(GraphNode, HasRelationMetadata):
