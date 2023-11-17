@@ -65,3 +65,4 @@ def test_render_limited(limit, expected_result):
     )
     actual_result = my_relation.render_limited()
     assert actual_result == expected_result
+    assert str(my_relation) == expected_result
