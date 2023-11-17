@@ -37,7 +37,7 @@ sources:
 """
 
 
-class TestEmpty:
+class BaseTestEmpty:
     @pytest.fixture(scope="class")
     def seeds(self):
         return {
@@ -69,3 +69,7 @@ class TestEmpty:
         # run with empty - 0 expected rows in output
         run_dbt(["run", "--empty"])
         self.assert_row_count(project, "model", 0)
+
+
+class TestEmpty(BaseTestEmpty):
+    pass
