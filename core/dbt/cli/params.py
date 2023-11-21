@@ -91,7 +91,7 @@ dry_run = click.option(
 )
 
 empty = click.option(
-    "--empty",
+    "--empty/--no-empty",
     envvar="DBT_EMPTY",
     help="If specified, limit input refs and sources to zero rows.",
     is_flag=True,
