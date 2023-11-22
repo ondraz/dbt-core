@@ -6,7 +6,7 @@ from http.server import SimpleHTTPRequestHandler
 
 import click
 
-from dbt.task.generate import DOCS_INDEX_FILE_PATH
+from dbt.task.docs import DOCS_INDEX_FILE_PATH
 from dbt.task.base import ConfiguredTask
 
 

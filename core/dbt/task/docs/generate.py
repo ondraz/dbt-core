@@ -7,7 +7,8 @@ import agate
 from dbt.common.dataclass_schema import ValidationError
 from dbt.clients.system import load_file_contents
 
-from .compile import CompileTask
+from dbt.task.docs import DOCS_INDEX_FILE_PATH
+from dbt.task.compile import CompileTask
 
 from dbt.adapters.factory import get_adapter
 from dbt.contracts.graph.nodes import ResultNode
@@ -44,9 +45,6 @@ from dbt.constants import (
 )
 
 CATALOG_FILENAME = "catalog.json"
-DOCS_INDEX_FILE_PATH = os.path.normpath(
-    os.path.join(os.path.dirname(__file__), "..", "index.html")
-)
 
 
 def get_stripped_prefix(source: Dict[str, Any], prefix: str) -> Dict[str, Any]:
