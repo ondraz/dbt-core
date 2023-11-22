@@ -30,6 +30,7 @@ from dbt.contracts.graph.nodes import (
     AccessType,
 )
 from dbt.contracts.graph.manifest import Manifest, ManifestMetadata
+from dbt.contracts.graph.saved_queries import QueryParams
 from dbt.contracts.graph.unparsed import ExposureType, Owner
 from dbt.contracts.state import PreviousState
 from dbt.node_types import NodeType
@@ -469,9 +470,12 @@ def make_saved_query(pkg: str, name: str, metric: str, path=None):
         package_name=pkg,
         path=path,
         description="Test Saved Query",
-        metrics=[metric],
-        group_bys=[],
-        where=None,
+        query_params=QueryParams(
+            metrics=[metric],
+            group_by=[],
+            where=None,
+        ),
+        exports=[],
         unique_id=f"saved_query.{pkg}.{name}",
         original_file_path=path,
         fqn=[pkg, "saved_queries", name],
@@ -1414,19 +1418,19 @@ def test_select_state_no_change(manifest, previous_state):
 def test_select_state_nothing(manifest, previous_state):
     previous_state.manifest = None
     method = statemethod(manifest, previous_state)
-    with pytest.raises(dbt.exceptions.DbtRuntimeError) as exc:
+    with pytest.raises(dbt.common.exceptions.DbtRuntimeError) as exc:
         search_manifest_using_method(manifest, method, "modified")
     assert "no comparison manifest" in str(exc.value)
 
-    with pytest.raises(dbt.exceptions.DbtRuntimeError) as exc:
+    with pytest.raises(dbt.common.exceptions.DbtRuntimeError) as exc:
         search_manifest_using_method(manifest, method, "new")
     assert "no comparison manifest" in str(exc.value)
 
-    with pytest.raises(dbt.exceptions.DbtRuntimeError) as exc:
+    with pytest.raises(dbt.common.exceptions.DbtRuntimeError) as exc:
         search_manifest_using_method(manifest, method, "unmodified")
     assert "no comparison manifest" in str(exc.value)
 
-    with pytest.raises(dbt.exceptions.DbtRuntimeError) as exc:
+    with pytest.raises(dbt.common.exceptions.DbtRuntimeError) as exc:
         search_manifest_using_method(manifest, method, "old")
     assert "no comparison manifest" in str(exc.value)
 

@@ -23,7 +23,7 @@ from dbt.contracts.graph.nodes import (
 )
 from dbt.contracts.graph.unparsed import UnparsedVersion
 from dbt.contracts.state import PreviousState
-from dbt.exceptions import (
+from dbt.common.exceptions import (
     DbtInternalError,
     DbtRuntimeError,
 )
@@ -193,6 +193,7 @@ class SelectorMethod(metaclass=abc.ABCMeta):
             self.exposure_nodes(included_nodes),
             self.metric_nodes(included_nodes),
             self.semantic_model_nodes(included_nodes),
+            self.saved_query_nodes(included_nodes),
         )
 
     def groupable_nodes(

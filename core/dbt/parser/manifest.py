@@ -40,7 +40,7 @@ from dbt.constants import (
     PARTIAL_PARSE_FILE_NAME,
     SEMANTIC_MANIFEST_FILE_NAME,
 )
-from dbt.helper_types import PathSet
+from dbt.common.helper_types import PathSet
 from dbt.common.events.functions import fire_event, get_invocation_id, warn_or_error
 from dbt.common.events.types import (
     PartialParsingErrorProcessingFile,
@@ -54,9 +54,11 @@ from dbt.common.events.types import (
     NodeNotFoundOrDisabled,
     StateCheckVarsHash,
     Note,
-    DeprecatedModel,
     DeprecatedReference,
     UpcomingReferenceDeprecation,
+)
+from dbt.events.types import (
+    DeprecatedModel,
 )
 from dbt.logger import DbtProcessState
 from dbt.node_types import NodeType, AccessType
@@ -1113,7 +1115,7 @@ class ManifestLoader:
         for saved_query in self.manifest.saved_queries.values():
             # TODO:
             # 1. process `where` of SavedQuery for `depends_on`s
-            # 2. process `group_bys` of SavedQuery for `depends_on``
+            # 2. process `group_by` of SavedQuery for `depends_on``
             _process_metrics_for_node(self.manifest, current_project, saved_query)
 
     def update_semantic_model(self, semantic_model) -> None:

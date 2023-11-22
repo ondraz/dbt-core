@@ -5,6 +5,7 @@ from dbt.contracts.graph.unparsed import (
     UnparsedDimension,
     UnparsedDimensionTypeParams,
     UnparsedEntity,
+    UnparsedExport,
     UnparsedExposure,
     UnparsedGroup,
     UnparsedMeasure,
@@ -13,9 +14,11 @@ from dbt.contracts.graph.unparsed import (
     UnparsedMetricInputMeasure,
     UnparsedMetricTypeParams,
     UnparsedNonAdditiveDimension,
+    UnparsedQueryParams,
     UnparsedSavedQuery,
     UnparsedSemanticModel,
 )
+from dbt.contracts.graph.model_config import SavedQueryConfig
 from dbt.contracts.graph.nodes import (
     Exposure,
     Group,
@@ -26,9 +29,9 @@ from dbt.contracts.graph.nodes import (
     MetricTypeParams,
     SemanticModel,
     SavedQuery,
-    WhereFilter,
-    WhereFilterIntersection,
 )
+from dbt.contracts.graph.saved_queries import Export, ExportConfig, QueryParams
+from dbt.contracts.graph.semantic_layer_common import WhereFilter, WhereFilterIntersection
 from dbt.contracts.graph.semantic_models import (
     Dimension,
     DimensionTypeParams,
@@ -36,7 +39,8 @@ from dbt.contracts.graph.semantic_models import (
     Measure,
     NonAdditiveDimension,
 )
-from dbt.exceptions import DbtInternalError, YamlParseDictError, JSONValidationError
+from dbt.common.exceptions import DbtInternalError
+from dbt.exceptions import YamlParseDictError, JSONValidationError
 from dbt.context.providers import generate_parse_exposure, generate_parse_semantic_models
 
 from dbt.contracts.graph.model_config import MetricConfig, ExposureConfig
@@ -54,7 +58,7 @@ from dbt_semantic_interfaces.type_enums import (
     MetricType,
     TimeGranularity,
 )
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 
 def parse_where_filter(
@@ -666,6 +670,32 @@ class SavedQueryParser(YamlReader):
 
         return config
 
+    def _get_export_config(
+        self, unparsed_export_config: Dict[str, Any], saved_query_config: SavedQueryConfig
+    ) -> ExportConfig:
+        # Combine the two dictionaries using dictionary unpacking
+        # the second dictionary is the one whose keys take priority
+        combined = {**saved_query_config.__dict__, **unparsed_export_config}
+        # `schema` is the user facing attribute, but for DSI protocol purposes we track it as `schema_name`
+        if combined.get("schema") is not None and combined.get("schema_name") is None:
+            combined["schema_name"] = combined["schema"]
+
+        return ExportConfig.from_dict(combined)
+
+    def _get_export(
+        self, unparsed: UnparsedExport, saved_query_config: SavedQueryConfig
+    ) -> Export:
+        return Export(
+            name=unparsed.name, config=self._get_export_config(unparsed.config, saved_query_config)
+        )
+
+    def _get_query_params(self, unparsed: UnparsedQueryParams) -> QueryParams:
+        return QueryParams(
+            group_by=unparsed.group_by,
+            metrics=unparsed.metrics,
+            where=parse_where_filter(unparsed.where),
+        )
+
     def parse_saved_query(self, unparsed: UnparsedSavedQuery) -> None:
         package_name = self.project.project_name
         unique_id = f"{NodeType.SavedQuery}.{package_name}.{unparsed.name}"
@@ -694,15 +724,14 @@ class SavedQueryParser(YamlReader):
             description=unparsed.description,
             label=unparsed.label,
             fqn=fqn,
-            group_bys=unparsed.group_bys,
-            metrics=unparsed.metrics,
             name=unparsed.name,
             original_file_path=self.yaml.path.original_file_path,
             package_name=package_name,
             path=path,
             resource_type=NodeType.SavedQuery,
             unique_id=unique_id,
-            where=parse_where_filter(unparsed.where),
+            query_params=self._get_query_params(unparsed.query_params),
+            exports=[self._get_export(export, config) for export in unparsed.exports],
             config=config,
             unrendered_config=unrendered_config,
             group=config.group,
