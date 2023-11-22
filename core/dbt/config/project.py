@@ -137,7 +137,7 @@ def package_config_from_data(
 
     # this depends on the two lists being in the same order
     if unrendered_packages_data:
-        for i in range(0, len(packages_data["packages"])):
+        for i in range(0, len(packages_data.get("packages", []))):
             packages_data["packages"][i]["unrendered"] = unrendered_packages_data["packages"][i]
 
     if PACKAGE_LOCK_HASH_KEY in packages_data:
