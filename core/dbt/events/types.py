@@ -1538,6 +1538,17 @@ class DepsFoundDuplicatePackage(InfoLevel):
         return f"Found duplicate package in packages.yml, removing: {self.removed_package}"
 
 
+# M034 is missing
+
+
+class DepsScrubbedPackageName(WarnLevel):
+    def code(self):
+        return "M035"
+
+    def message(self) -> str:
+        return f"Detected secret env var in {self.package_name}. dbt will write a scrubbed representation to the lock file. This will cause issues with subsequent 'dbt deps' using the lock file, requiring 'dbt deps --upgrade'"
+
+
 # =======================================================
 # Q - Node execution
 # =======================================================
