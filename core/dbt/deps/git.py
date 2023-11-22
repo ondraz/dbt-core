@@ -95,6 +95,8 @@ class GitPinnedPackage(GitPackageMixin, PinnedPackage):
         self, project: Project, renderer: PackageRenderer
     ) -> ProjectPackageMetadata:
         path = self._checkout()
+        # overwrite 'revision' with actual commit SHA
+        self.revision = git.get_current_sha(path)
 
         if (self.revision == "HEAD" or self.revision in ("main", "master")) and self.warn_unpinned:
             warn_or_error(DepsUnpinned(git=self.git))

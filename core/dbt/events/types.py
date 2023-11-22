@@ -1497,7 +1497,7 @@ class DepsUnpinned(WarnLevel):
         elif self.revision in ("main", "master"):
             unpinned_msg = f'pinned to the "{self.revision}" branch'
         else:
-            unpinned_msg = None
+            unpinned_msg = "not pinned to any branch, tag, or commit"
 
         msg = (
             f'The git package "{self.git}" \n\tis {unpinned_msg}.\n\tThis can introduce '
