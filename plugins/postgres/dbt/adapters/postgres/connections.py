@@ -2,6 +2,7 @@ from contextlib import contextmanager
 
 import psycopg2
 from psycopg2.extensions import string_types
+from psycopg2.extras import register_uuid, register_ipaddress
 
 import dbt.exceptions
 from dbt.adapters.base import Credentials
@@ -143,6 +144,11 @@ class PostgresConnectionManager(SQLConnectionManager):
                 connect_timeout=credentials.connect_timeout,
                 **kwargs,
             )
+
+            # Register extra data types to avoid dbt contract errors
+            register_uuid()
+            register_ipaddress()
+
             if credentials.role:
                 handle.cursor().execute("set role {}".format(credentials.role))
             return handle
